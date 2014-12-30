@@ -1,0 +1,348 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+    <title><![CDATA[Sculpin Blog Skeleton]]></title>
+    <link href="/atom.xml" rel="self"/>
+    <link href="/"/>
+    <updated>2014-12-30T23:24:02+01:00</updated>
+    <id>/</id>
+        <generator uri="http://sculpin.io/">Sculpin</generator>
+            <entry>
+            <title type="html"><![CDATA[Instalacion del entorno de desarrollo]]></title>
+            <link href="/blog/2014/12/26/Instalacion"/>
+            <updated>2014-12-26T00:00:00+01:00</updated>
+            <id>/blog/2014/12/26/Instalacion</id>
+            <content type="html"><![CDATA[<h3>Preparación del entorno de desarrollo</h3>
+
+<p>El objetivo de este documento es permitir que los desarrolles puedan crear <strong>un entorno de test</strong> en una maquina local o virtual lo mas parecida posible a la que en un futuro se va a utilizar en el entorno de producción.
+Esta guía está pensada para el sistema operativo <strong>Ubuntu Server 14.04.1 LTS</strong>.</p>
+
+<h4>Instalación del sistema operativo</h4>
+
+<p>Para la instalación de Ubuntu Server tan solo hay que utilizar la imagen de disco que se puede descargar desde su página oficial desde <a href="http://www.ubuntu.com/download/server">este enlace</a>.</p>
+
+<p>Una vez arrancada la máquina desde la imagen de disco tan solo hay que seguir las instrucciones de instalación. Durante este proceso se le preguntará si desea preinstalar ciertos paquetes. Es recomendable instalar los siguientes paquetes:</p>
+
+<ul>
+<li>OpenSSH</li>
+<li>LAMP Stack  </li>
+</ul>
+
+<h4>Configuración básica del servidor</h4>
+
+<h5>Dar permisos de administrador a la nueva cuenta creada</h5>
+
+<p>Para evitar salir de la cuenta del usuario <em>normal</em> y volver a entrar con la cuenta <em>root</em> hay que darle <em>privilegios</em> <code>sudo</code> a nuestra cuenta de usuario.</p>
+
+<p>Para dar este tipo de privilegios hay que ejecutar el comando</p>
+
+<pre><code>visudo
+</code></pre>
+
+<p>Este comando abrirá un archivo de configuración. Encuentre una sección similar a esta:</p>
+
+<pre><code># User privilege specification
+root    ALL=(ALL:ALL) ALL
+</code></pre>
+
+<p>Tan solo hay que añadir otra linea al fichero con el mismo formato que la anterior, sustituyendo "icca" por el nombre de la cuenta de usuario que corresponda:</p>
+
+<pre><code># User privilege specification
+root    ALL=(ALL:ALL) ALL
+icca    ALL=(ALL:ALL) ALL
+</code></pre>
+
+<p>Después guarde el fichero.</p>
+
+<h5>Configurar la interfaz de red con una IP estática</h5>
+
+<p>Hay que modificar el archivo de configuración de red</p>
+
+<pre><code>/etc/network/interfaces
+</code></pre>
+
+<p>Y utilizamos la siguiente configuración:</p>
+
+<pre><code># Configuración de dirección IP fija para el interfaz eth0
+auto eth0
+iface eth0 inet static
+address 192.168.100.228
+netmask 255.255.255.0
+network 192.168.100.0
+broadcast 192.168.100.255
+gateway 192.168.100.1
+</code></pre>
+
+<p>y reiniciamos el servicio con:</p>
+
+<pre><code>sudo /etc/init.d/networking restart
+</code></pre>
+
+<h4>Instalación y configuración de Apache</h4>
+
+<p>Para instalar apache es recomendable hacerlo a través del gestor de paquetes de Ubuntu <code>apt</code>.
+Para comenzar la instalación ejecutamos los siguientes comandos:</p>
+
+<pre><code>sudo apt-get update
+sudo apt-get install apache2
+</code></pre>
+
+<p>Dado que se ha utilizado el comando <code>sudo</code> para realizar la instalación con privilegios <code>root</code> se le preguntará por la contraseña de usuario.</p>
+
+<p>Después de ejecutar estos comandos el servidor apache estará instalado, para comprobar si funciona correctamente intenta acceder al servidor mediando un navegador</p>
+
+<pre><code>http://direccion_IP_del_servidor
+</code></pre>
+
+<p>Si no sabes cual es la dirección pública del servidor puedes utilizar el siguiente comando:</p>
+
+<pre><code>ip addr show eth0 | grep inet | awk '{ print $2; }' | sed 's/\/.*$//'
+</code></pre>
+
+<p>Una vez instalado Apache se puede personalizar la configuración modificando el archivo de configuración situado en la carpeta</p>
+
+<pre><code>/etc/apache2/con
+</code></pre>
+
+<p>La carpeta por defecto, donde Apache buscará para servir los archivos es</p>
+
+<pre><code>/var/www
+</code></pre>
+
+<h4>Instalación y configuración de MySQL</h4>
+
+<p>Para instalarlo ejecutamos el siguiente comando</p>
+
+<pre><code>sudo apt-get install mysql-server php5-mysql
+</code></pre>
+
+<p>Durante el proceso de instalación se le pedirá que introduzca y confirme la contraseña para el usuario <code>root</code> de MySQL.</p>
+
+<p>Cuando termine el proceso de instalación es necesario ejecutar algunos comandos para tener un entorno MySQL seguro.</p>
+
+<p>Primero hay que crear la estructura de directorios de bases de datos, donde MySQL almacenará su información</p>
+
+<pre><code>sudo mysql_install_db
+</code></pre>
+
+<p>A continuación es necesario ejecutar un script de seguridad que elimina algunos comportamientos peligrosos por defecto</p>
+
+<pre><code>sudo mysql_secure_installation
+</code></pre>
+
+<p>Durante el proceso de instalación se pedirá la contraseña del usuario <code>root</code> y se preguntará si es necesario cambiar dicha contraseña. Para el resto de opciones tan solo hay que pulsar <code>ENTER</code> para aceptar los valores por defecto.</p>
+
+<p>Por último si queremos modificar los parámetros de configuración de MySQL es necesario modificar el archivo de configuración. Para ello, primero se realiza una copia de seguridad del archivo original</p>
+
+<pre><code>sudo cp /etc/mysql/my.cnf /etc/mysql/my.cnf_original
+</code></pre>
+
+<p>Se modifica el archivo con cualquier editor de texto</p>
+
+<pre><code>sudo nano /etc/mysql/my.cnf
+</code></pre>
+
+<p>Y se reinicia el servidor MySQL</p>
+
+<pre><code>sudo service mysql start
+</code></pre>
+
+<p>Los parámetros que se han modificado en este caso son los siguientes:</p>
+
+<pre><code>bind-address        = 0.0.0.0
+innodb_buffer_pool_size = 512M
+</code></pre>
+
+<h4>Configuración del servidor SSH</h4>
+
+<p>Para instalar la aplicación servidor de OpenSSH, y los archivos de soporte relacionados, use en una línea de comandos la siguiente instrucción:</p>
+
+<pre><code>sudo apt-get install openssh-server
+</code></pre>
+
+<p>El paquete <code>openssh-server</code> se puede seleccionar para instalar durante el proceso de Instalación de la Edición Servidor.</p>
+
+<p>Puede configurar el comportamiento predeterminado del servidor OpenSSH, sshd, editando el archivo <code>/etc/ssh/sshd_config</code>.</p>
+
+<p>Antes de cambiar e archivo de configuración es recomendable hacer una copia de seguridad del archivo protegerlo contra escritura.</p>
+
+<pre><code>sudo cp /etc/ssh/sshd_config /etc/ssh/sshd_config.original
+sudo chmod a-w /etc/ssh/sshd_config.original
+</code></pre>
+
+<p>Es recomendable restringir el acceso al usuario <code>root</code> por motivos de seguridad. Para ello busque la linea</p>
+
+<pre><code>PermitRootLogin yes
+</code></pre>
+
+<p>Puede modificar esta linea a <em>no</em> si quiere deshabitar el acceso remoto a <code>root</code></p>
+
+<pre><code>PermitRootLogin no
+</code></pre>
+
+<p>Después de hacer los cambios en el archivo <code>/etc/ssh/sshd_config</code>, guarde este, y reinicie el servidor <code>sshd</code> para que los cambios tengan efecto usando la siguiente orden en una terminal:</p>
+
+<pre><code>sudo service ssh restart
+</code></pre>
+
+<h4>Instalación y configuración de openLDAP</h4>
+
+<p>Para instalar el servidor LDAP utilizamos los siguientes comandos:</p>
+
+<pre><code>sudo apt-get install slapd ldap-utils
+sudo dpkg-reconfigure slapd
+</code></pre>
+
+<p>En el proceso de instalación se pedirá el usuario, contraseña de usuario, y dominio</p>
+
+<pre><code>usuario:admin
+pass:icca
+dominio: relationalmessages.com
+login: cn=admin,dc=relationalmessages,dc=com
+Base de datos: HDB
+</code></pre>
+]]></content>
+        </entry>
+            <entry>
+            <title type="html"><![CDATA[Syntax Highlighting]]></title>
+            <link href="/blog/2013/02/04/highlight"/>
+            <updated>2013-02-04T00:00:00+01:00</updated>
+            <id>/blog/2013/02/04/highlight</id>
+            <content type="html"><![CDATA[<p>You're all programmers, right? And you're writing code snippets on your Sculpin
+powered blog? Yeah. So you want some highlighting with your static site generation?
+Here you go!</p>
+
+<pre><code>namespace Foo;
+
+/**
+ * Awesome Contrived Example.
+ */
+class Bar implements BarInterface
+{
+    private $baz;
+
+    public function __construct(BazInterface $baz)
+    {
+        $this-&gt;baz = $baz;
+    }
+
+    public function doIt()
+    {
+        return $this-&gt;baz-&gt;do('it');
+    }
+}
+</code></pre>
+
+<p>You can also use <a href="http://michelf.ca/projects/php-markdown/extra/#fenced-code-blocks">fenced code blocks</a> with a syntax declaration at the top.
+The markers are <code>~</code> instead of <code>`</code>.</p>
+
+<pre><code class="php">if ($fencedCodeBlock-&gt;syntax !== 'PHP') {
+    throw new UnexpectedValueException("wat");
+}
+</code></pre>
+
+<p>Like this addition to the skeleton? You can thank for <a href="https://github.com/Pawka">@Pawka</a>
+for suggesting it. :)</p>
+]]></content>
+        </entry>
+            <entry>
+            <title type="html"><![CDATA[This is a draft!]]></title>
+            <link href="/blog/2012/12/14/a-draft-post"/>
+            <updated>2012-12-14T00:00:00+01:00</updated>
+            <id>/blog/2012/12/14/a-draft-post</id>
+            <content type="html"><![CDATA[<p>This is a draft post. You will only see this if you are running the <code>dev</code>
+environment (<code>dev</code> is the default).</p>
+
+<p>All draft posts will automatically be tagged <code>draft</code> so they are easy to
+find.</p>
+]]></content>
+        </entry>
+            <entry>
+            <title type="html"><![CDATA[Lorem Ipsum]]></title>
+            <link href="/blog/2012/11/27/lorem-ipsum"/>
+            <updated>2012-11-27T00:00:00+01:00</updated>
+            <id>/blog/2012/11/27/lorem-ipsum</id>
+            <content type="html"><![CDATA[<p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Proin consequat congue
+lacus vel convallis. Cras nisi urna, ultrices non semper quis, ultricies sit
+amet est. Donec nunc velit, consequat a pulvinar a, eleifend id leo. Curabitur
+vel leo eros, vitae elementum purus. Integer id lorem hendrerit purus gravida
+commodo. Pellentesque nec rhoncus turpis. Cras feugiat odio eget quam semper at
+dictum lectus adipiscing. In ut est et mauris pulvinar placerat eget fringilla
+lectus.</p>
+
+<p>Ut in mauris augue, vitae facilisis purus. Nam ullamcorper pharetra lorem,
+cursus lobortis tellus facilisis congue. Etiam ac dapibus lectus. Nunc tempus
+ullamcorper felis, eu sagittis risus mollis aliquam. Mauris congue orci ac metus
+egestas porta nec ac lectus. Nam ac neque vitae quam sagittis dapibus. Morbi sit
+amet erat ac justo rutrum molestie id in tortor. Proin egestas tortor neque,
+eget fringilla nunc. Donec consequat purus ac risus dignissim dignissim.
+Praesent dui nisl, suscipit sed cursus in, dictum non elit. Nulla eget congue
+nisl.</p>
+
+<p>Morbi hendrerit porta ante, dapibus adipiscing nibh ornare at. Nullam iaculis
+porta ante, at semper tellus auctor nec. Vestibulum nec justo sed purus
+elementum venenatis. In hac habitasse platea dictumst. Fusce nibh tellus, varius
+non commodo sit amet, eleifend placerat nisl. Donec sit amet enim cursus ligula
+adipiscing auctor. Nullam sagittis porta ligula vitae rutrum. Aenean id sapien
+mi, elementum ullamcorper lectus. Aliquam erat volutpat. Fusce bibendum, leo
+ultricies lacinia viverra, mauris urna fermentum sem, id tempus lectus nunc
+faucibus magna. Vestibulum risus mi, tempus ut lobortis non, mattis sed diam.
+Nunc at mattis leo.</p>
+
+<p>Ut erat nunc, vestibulum sit amet sodales non, tincidunt nec justo. Integer
+vitae tortor massa. Vestibulum tincidunt commodo lacus, ac cursus lorem mattis
+eu. Donec ut magna vel urna fermentum congue. Donec laoreet neque at velit
+imperdiet luctus. In consectetur lacus eu purus dictum a imperdiet leo
+ullamcorper. Phasellus consequat feugiat tincidunt. Quisque vel orci in mauris
+fermentum pretium.</p>
+
+<p>Pellentesque rhoncus accumsan auctor. Nunc venenatis tellus non ante pharetra
+pretium. Sed rutrum, eros eu tristique luctus, neque sapien ultrices felis, id
+varius orci erat eget leo. Curabitur ut volutpat diam. Phasellus porta neque
+vitae nisi sodales ultrices. Etiam ultricies blandit lorem, id accumsan eros
+facilisis vel. Praesent nulla sapien, laoreet sit amet dapibus sit amet,
+tincidunt vitae neque. Vestibulum aliquam sollicitudin urna, in facilisis dui
+aliquam id.</p>
+]]></content>
+        </entry>
+            <entry>
+            <title type="html"><![CDATA[And Then There Was Textile Support]]></title>
+            <link href="/blog/2012/11/26/and-then-there-was-textile-support"/>
+            <updated>2012-11-26T00:00:00+01:00</updated>
+            <id>/blog/2012/11/26/and-then-there-was-textile-support</id>
+            <content type="html"><![CDATA[<p><a href="https://github.com/netcarver/textile">Textile</a> support was added on November 26th, 2012. Markdown is great, but so is choice. More converters for all!</p>
+
+<p>In honor of this milestone, this post is written in <strong>Textile</strong>.</p>]]></content>
+        </entry>
+            <entry>
+            <title type="html"><![CDATA[Balrog]]></title>
+            <link href="/blog/2012/10/16/balrog"/>
+            <updated>2012-10-16T00:00:00+02:00</updated>
+            <id>/blog/2012/10/16/balrog</id>
+            <content type="html"><![CDATA[<p>Found out about <a href="http://github.com/igorw/balrog">Balrog</a> today! It looks
+like a really nice micro static site generator. Maybe Sculpin and Balrog
+can be friends?</p>
+]]></content>
+        </entry>
+            <entry>
+            <title type="html"><![CDATA[Symfony Live Hacking Day!]]></title>
+            <link href="/blog/2012/09/29/symfony-live-hacking-day"/>
+            <updated>2012-09-29T00:00:00+02:00</updated>
+            <id>/blog/2012/09/29/symfony-live-hacking-day</id>
+            <content type="html"><![CDATA[<p>Fun times at the Symfony Live San Francisco 2012 Hacking Day! Code
+was hacked and pizza was had. Some pics of the conference are
+available on the <a href="https://www.facebook.com/media/set/?set=a.450514941665306.112810.129739647076172">Sensio Labs Facebook page</a>.</p>
+]]></content>
+        </entry>
+            <entry>
+            <title type="html"><![CDATA[Happy Birthday Sculpin!]]></title>
+            <link href="/blog/2011/12/20/happy-birthday-sculpin"/>
+            <updated>2011-12-20T00:00:00+01:00</updated>
+            <id>/blog/2011/12/20/happy-birthday-sculpin</id>
+            <content type="html"><![CDATA[<p>The first commit to the Sculpin repository was made on December 20th, 2011.
+What a trip since then!</p>
+
+<p>Sculpin has always been a big fan of <a href="http://daringfireball.net/projects/markdown/">Markdown</a>. So this post was
+written in Markdown. :)</p>
+]]></content>
+        </entry>
+    </feed>
